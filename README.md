@@ -10,8 +10,10 @@ This app now has a local API server backed by SQLite.
 
 Default API settings:
 
-- API: `http://127.0.0.1:3001`
+- API: `http://0.0.0.0:3001`
+- Host: `0.0.0.0`
 - Frontend proxy: `/api/*`
+- Frontend API base URL: `VITE_API_BASE_URL=/api`
 - Default PIN: `1314`
 - SQLite file: `server/data/kuromi.sqlite`
 
@@ -22,6 +24,32 @@ Useful commands:
 - `npm run dev` starts only the Vite frontend.
 - `npm run build` type-checks and builds the frontend.
 - `npm run lint` runs ESLint.
+
+## Linux deployment
+
+Do not deploy a `node_modules` directory copied from Windows. This project uses
+native packages such as `better-sqlite3`, so dependencies should be installed on
+the Linux server:
+
+```sh
+cd /www/wwwroot/loveapi.chuzoux.top/kuromi-app
+rm -rf node_modules
+npm ci
+npm run server:start
+```
+
+If the existing server copy is already in place and you only need to clear the
+current `tsx` permission error, the updated `server:start` script runs through
+`node --import tsx` instead of executing `node_modules/.bin/tsx` directly.
+
+The API listens on `HOST=0.0.0.0` by default so it can accept external network
+connections. Set `HOST=127.0.0.1` in `.env` only when the API should be reachable
+from the local machine or a local reverse proxy.
+
+If the frontend is hosted on a different domain from the API, set
+`VITE_API_BASE_URL=https://loveapi.chuzoux.top/api` before building the frontend.
+Gallery image URLs are resolved from this value, so uploaded images will load
+from the API domain instead of the frontend domain.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

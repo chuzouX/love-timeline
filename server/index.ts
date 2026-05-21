@@ -11,6 +11,7 @@ import { imageSize } from 'image-size';
 dotenv.config();
 
 const port = Number(process.env.PORT ?? 3001);
+const host = process.env.HOST ?? '0.0.0.0';
 const pinCode = process.env.PIN_CODE ?? '1314';
 const jwtSecret = process.env.JWT_SECRET ?? 'kuromi-local-dev-secret';
 const databasePath = path.resolve(process.cwd(), process.env.DATABASE_PATH ?? './server/data/kuromi.sqlite');
@@ -611,6 +612,6 @@ function readPeriodRecordById(id: number) {
   };
 }
 
-app.listen(port, '127.0.0.1', () => {
-  console.log(`Kuromi API running at http://127.0.0.1:${port}`);
+app.listen(port, host, () => {
+  console.log(`Kuromi API listening on http://${host}:${port}`);
 });

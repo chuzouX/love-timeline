@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "tsx watch server/index.ts",
-    "server:start": "tsx server/index.ts",
+    "server": "node --watch --import tsx server/index.ts",
+    "server:start": "node --import tsx server/index.ts",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

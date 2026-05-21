@@ -88,10 +88,33 @@ export type GalleryImage = {
 
 const tokenKey = 'kuromi_api_token';
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+const galleryFilePath = '/gallery/files/';
 
 export const api = axios.create({
   baseURL: apiBaseURL,
 });
+
+function resolveApiAssetURL(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const normalizedPath = path.startsWith('/api/') ? path.slice('/api'.length) : path;
+
+  if (/^https?:\/\//i.test(apiBaseURL)) {
+    return new URL(`${apiBaseURL.replace(/\/$/, '')}${normalizedPath}`, window.location.href).toString();
+  }
+
+  const basePath = apiBaseURL.startsWith('/') ? apiBaseURL : `/${apiBaseURL}`;
+  return `${basePath.replace(/\/$/, '')}${normalizedPath}`;
+}
+
+function normalizeGalleryImage(image: GalleryImage): GalleryImage {
+  const filePathIndex = image.url.indexOf(galleryFilePath);
+  const filePath = filePathIndex >= 0 ? image.url.slice(filePathIndex) : `/gallery/files/${image.filename}`;
+  return {
+    ...image,
+    url: resolveApiAssetURL(filePath),
+  };
+}
 
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem(tokenKey);
@@ -151,14 +174,14 @@ export async function deleteEvent(id: number) {
 
 export async function getGalleryImages() {
   const { data } = await api.get<GalleryImage[]>('/gallery');
-  return data;
+  return data.map(normalizeGalleryImage);
 }
 
 export async function uploadGalleryImage(file: File) {
   const form = new FormData();
   form.append('image', file);
   const { data } = await api.post<GalleryImage>('/gallery', form);
-  return data;
+  return normalizeGalleryImage(data);
 }
 
 export async function deleteGalleryImage(id: number) {
