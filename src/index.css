@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&family=Gloria+Hallelujah&family=Fredoka:wght@700&family=Caveat:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&family=Gloria+Hallelujah&family=Fredoka:wght@700&family=Caveat:wght@700&family=Comfortaa:wght@700&family=Quicksand:wght@700&display=swap');
 
 :root {
   font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -14,14 +14,17 @@
 /* Option 2: Dancing Script (Elegant Cursive) */
 .font-love-dancing { font-family: 'Dancing Script', cursive; }
 
-/* Option 3: Fredoka (Cute & Rounded) */
+/* Option 3: Fredoka (Rounded) */
 .font-love-fredoka { font-family: 'Fredoka', sans-serif; }
 
-/* Option 4: Caveat (Playful Handwriting) */
+/* Option 4: Caveat (Handwriting) */
 .font-love-caveat { font-family: 'Caveat', cursive; }
 
+/* Option 5: Comfortaa (Ultra Rounded) */
+.font-love-comfortaa { font-family: 'Comfortaa', cursive; }
+
 .font-love {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Comfortaa', cursive;
 }
 
 

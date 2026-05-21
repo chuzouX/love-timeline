@@ -87,7 +87,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
             <a href="#home" className="flex items-center gap-2 min-w-0 group">
               <img src="/assets/titles/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="hidden h-8 max-w-44 object-contain sm:block md:h-10" />
-              <span className="font-love text-2xl font-bold tracking-tighter bg-gradient-to-r from-kuromi-purple to-kuromi-pink bg-clip-text text-transparent transition-all group-hover:scale-105 md:text-4xl">
+              <span className="font-love text-2xl font-bold tracking-normal bg-gradient-to-r from-kuromi-purple to-kuromi-pink bg-clip-text text-transparent transition-all group-hover:scale-105 md:text-4xl">
                 Y&Z Love
               </span>
             </a>
