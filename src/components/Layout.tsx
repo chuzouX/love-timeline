@@ -11,7 +11,19 @@ const navItems = [
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('kuromi_theme') ?? 'light');
+  
+  // Theme logic: Calculate if it should be dark based on time (18:00 - 06:00)
+  const isNightTime = () => {
+    const hour = new Date().getHours();
+    return hour >= 18 || hour < 6;
+  };
+
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('kuromi_theme');
+    if (saved) return saved;
+    return isNightTime() ? 'dark' : 'light';
+  });
+  
   const isDark = theme === 'dark';
 
   useEffect(() => {
@@ -19,8 +31,28 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     localStorage.setItem('kuromi_theme', theme);
   }, [theme]);
 
+  // Auto-switch theme based on time if user hasn't manually set one in this session
+  // or just to keep it fresh if the app stays open
+  useEffect(() => {
+    const checkTheme = () => {
+      // If the user has NEVER set a theme, or we want to follow time strictly when no manual override is in localStorage
+      // For a better UX, we only auto-switch if the user hasn't explicitly clicked the toggle in the current session
+      // But based on request: "automatic follow time", we'll implement a check.
+      const saved = localStorage.getItem('kuromi_theme_manual');
+      if (!saved) {
+        const nextTheme = isNightTime() ? 'dark' : 'light';
+        setTheme(nextTheme);
+      }
+    };
+
+    const interval = setInterval(checkTheme, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleTheme = () => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('kuromi_theme_manual', 'true'); // Mark that user made a manual choice
   };
 
   return (
