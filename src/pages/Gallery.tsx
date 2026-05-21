@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { deleteGalleryImage, ensureUnlocked, getGalleryImages, uploadGalleryImage, type GalleryImage } from '../api/client';
 
 const idleDelayMs = 2600;
@@ -235,8 +236,9 @@ const Gallery: React.FC = () => {
         )}
       </div>
 
-      {selectedImage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm animate-fadeIn md:p-8" onClick={() => setSelectedImage(null)}>
+      {selectedImage &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm animate-fadeIn md:p-8" onClick={() => setSelectedImage(null)}>
           <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-white/90 shadow-2xl glass-panel md:rounded-[2.5rem]" onClick={(event) => event.stopPropagation()}>
             <div className="flex min-w-0 items-center justify-between border-b border-gray-100 bg-white/50 px-4 py-3 md:px-6 md:py-4">
               <div className="flex min-w-0 items-center gap-3">
@@ -261,8 +263,9 @@ const Gallery: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </div>
   );
 };
