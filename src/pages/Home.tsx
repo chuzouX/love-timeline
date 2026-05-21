@@ -42,7 +42,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-w-0">
+    <div className="w-full min-w-0 pt-6 sm:pt-10 md:pt-16">
       <div className="flex min-w-0 flex-col items-center justify-between gap-8 lg:flex-row lg:gap-12">
         <div className="order-2 min-w-0 flex-1 space-y-6 text-center lg:order-1 lg:text-left">
           <div className="space-y-2">
