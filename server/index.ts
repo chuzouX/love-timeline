@@ -298,8 +298,15 @@ function readPeriod() {
   const config = db.prepare('SELECT id, cycleDays, periodDays FROM period_config WHERE id = 1').get() as DbPeriodConfig;
   const records = db.prepare('SELECT id, startDate, endDate, note, symptoms, createdAt FROM period_records ORDER BY startDate DESC, id DESC').all() as DbPeriodRecord[];
   const latestRecord = records[0];
+  const today = toDateKey(new Date());
   const nextStartDate = latestRecord ? addDays(latestRecord.startDate, config.cycleDays) : null;
-  const daysUntilNext = nextStartDate ? Math.ceil((Date.parse(`${nextStartDate}T00:00:00`) - Date.now()) / 86_400_000) : null;
+  const daysUntilNext = nextStartDate ? daysBetween(today, nextStartDate) : null;
+  const ovulationDate = nextStartDate ? addDays(nextStartDate, -14) : null;
+  const ovulationWindowStart = ovulationDate ? addDays(ovulationDate, -5) : null;
+  const ovulationWindowEnd = ovulationDate ? addDays(ovulationDate, 1) : null;
+  const daysUntilOvulation = ovulationDate ? daysBetween(today, ovulationDate) : null;
+  const daysUntilOvulationWindow = ovulationWindowStart ? daysBetween(today, ovulationWindowStart) : null;
+  const currentPhase = latestRecord ? getCyclePhase(today, latestRecord.startDate, config.cycleDays, config.periodDays) : null;
 
   return {
     config,
@@ -307,7 +314,17 @@ function readPeriod() {
       ...record,
       symptoms: JSON.parse(record.symptoms) as string[],
     })),
-    prediction: { nextStartDate, daysUntilNext },
+    prediction: {
+      nextStartDate,
+      daysUntilNext,
+      ovulationDate,
+      ovulationWindowStart,
+      ovulationWindowEnd,
+      daysUntilOvulation,
+      daysUntilOvulationWindow,
+      currentPhase,
+      currentPhaseLabel: getCyclePhaseLabel(currentPhase),
+    },
   };
 }
 
@@ -315,6 +332,38 @@ function addDays(date: string, days: number) {
   const next = new Date(`${date}T00:00:00`);
   next.setDate(next.getDate() + days);
   return next.toISOString().slice(0, 10);
+}
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function daysBetween(fromDate: string, toDate: string) {
+  return Math.ceil((Date.parse(`${toDate}T00:00:00`) - Date.parse(`${fromDate}T00:00:00`)) / 86_400_000);
+}
+
+function getCyclePhase(today: string, cycleStartDate: string, cycleDays: number, periodDays: number) {
+  const daysSinceStart = daysBetween(cycleStartDate, today);
+  const dayInCycle = ((daysSinceStart % cycleDays) + cycleDays) % cycleDays + 1;
+  const ovulationDay = cycleDays - 13;
+  const ovulationWindowStartDay = Math.max(periodDays + 1, ovulationDay - 5);
+  const ovulationWindowEndDay = Math.min(cycleDays, ovulationDay + 1);
+
+  if (dayInCycle <= periodDays) return 'menstrual';
+  if (dayInCycle >= ovulationWindowStartDay && dayInCycle <= ovulationWindowEndDay) return 'ovulation';
+  if (dayInCycle < ovulationWindowStartDay) return 'follicular';
+  return 'luteal';
+}
+
+function getCyclePhaseLabel(phase: string | null) {
+  if (phase === 'menstrual') return '经期';
+  if (phase === 'follicular') return '卵泡期';
+  if (phase === 'ovulation') return '排卵期';
+  if (phase === 'luteal') return '黄体期';
+  return null;
 }
 
 function route(handler: (req: Request, res: Response) => void) {

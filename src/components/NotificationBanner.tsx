@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { getEvents, getPeriod, type EventItem, type PeriodData } from '../api/client';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Lunar } from 'lunar-javascript';
+import { getEvents, getPeriod, type EventItem, type PeriodData } from '../api/client';
 
 const chinaHolidayRanges2026 = [
-  { name: '元旦假期', icon: '🎉', start: '2026-01-01', end: '2026-01-03' },
-  { name: '春节假期', icon: '🧧', start: '2026-02-15', end: '2026-02-23' },
-  { name: '清明假期', icon: '🌿', start: '2026-04-04', end: '2026-04-06' },
-  { name: '劳动节假期', icon: '🧰', start: '2026-05-01', end: '2026-05-05' },
-  { name: '端午假期', icon: '🍃', start: '2026-06-19', end: '2026-06-21' },
-  { name: '中秋假期', icon: '🥮', start: '2026-09-25', end: '2026-09-27' },
-  { name: '国庆假期', icon: '🇨🇳', start: '2026-10-01', end: '2026-10-07' },
+  { name: '元旦假期', icon: '🎉', start: '2026-01-01' },
+  { name: '春节假期', icon: '🧧', start: '2026-02-15' },
+  { name: '清明假期', icon: '🌿', start: '2026-04-04' },
+  { name: '劳动节假期', icon: '🧰', start: '2026-05-01' },
+  { name: '端午假期', icon: '🍃', start: '2026-06-19' },
+  { name: '中秋假期', icon: '🥮', start: '2026-09-25' },
+  { name: '国庆假期', icon: '🇨🇳', start: '2026-10-01' },
 ];
 
 type Notification = {
@@ -19,8 +19,19 @@ type Notification = {
   type: 'event' | 'period' | 'holiday';
 };
 
-interface Props {
+type Props = {
   onVisibilityChange?: (visible: boolean) => void;
+};
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function daysBetween(fromDate: string, toDate: string) {
+  return Math.ceil((Date.parse(`${toDate}T00:00:00`) - Date.parse(`${fromDate}T00:00:00`)) / 86_400_000);
 }
 
 const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
@@ -31,77 +42,79 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [evs, prd] = await Promise.all([getEvents(), getPeriod()]);
-        setEvents(evs);
-        setPeriod(prd);
+        const [nextEvents, nextPeriod] = await Promise.all([getEvents(), getPeriod()]);
+        setEvents(nextEvents);
+        setPeriod(nextPeriod);
       } catch {
-        // Silently fail if data can't be fetched
+        // 公告是辅助信息，接口失败时不阻塞页面。
       }
     };
+
     void fetchData();
   }, []);
 
   const notifications = useMemo(() => {
     const list: Notification[] = [];
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const currentYear = today.getFullYear();
+    const today = toDateKey(new Date());
+    const currentYear = new Date().getFullYear();
 
-    // 1. Check Period
-    if (period?.prediction?.daysUntilNext !== undefined && period.prediction.daysUntilNext !== null) {
+    if (period?.prediction.daysUntilNext != null && period.prediction.daysUntilNext >= 0 && period.prediction.daysUntilNext <= 3) {
       const days = period.prediction.daysUntilNext;
-      if (days <= 3 && days >= 0) {
+      list.push({
+        id: 'period-next',
+        text: `生理期预计${days === 0 ? '今天' : `${days} 天后`}开始，注意保暖`,
+        icon: '🎀',
+        type: 'period',
+      });
+    }
+
+    if (period?.prediction.daysUntilOvulationWindow != null && period.prediction.daysUntilOvulationWindow >= 0 && period.prediction.daysUntilOvulationWindow <= 3) {
+      const days = period.prediction.daysUntilOvulationWindow;
+      list.push({
+        id: 'period-ovulation',
+        text: `排卵期预计${days === 0 ? '今天' : `${days} 天后`}开始`,
+        icon: '🌙',
+        type: 'period',
+      });
+    }
+
+    for (const event of events) {
+      let eventSolarDate: string | null = null;
+
+      if (event.calendarType === 'lunar' && event.lunarMonth && event.lunarDay) {
+        try {
+          const lunarMonth = event.lunarIsLeapMonth ? -event.lunarMonth : event.lunarMonth;
+          eventSolarDate = Lunar.fromYmd(currentYear, lunarMonth, event.lunarDay).getSolar().toYmd();
+        } catch {
+          // Ignore invalid lunar dates for this year.
+        }
+      } else if (event.recurrence === 'yearly') {
+        eventSolarDate = `${currentYear}-${event.date.slice(5)}`;
+      } else {
+        eventSolarDate = event.date;
+      }
+
+      if (!eventSolarDate) continue;
+      const diff = daysBetween(today, eventSolarDate);
+      if (diff >= 0 && diff <= 7) {
         list.push({
-          id: 'period-prediction',
-          text: `生理期预计还有 ${days === 0 ? '今天' : days + ' 天'} 开始，注意保暖哦`,
-          icon: '🎀',
-          type: 'period'
+          id: `event-${event.id}`,
+          text: `${diff === 0 ? '今天' : `${diff} 天后`}是：${event.name}`,
+          icon: event.icon,
+          type: 'event',
         });
       }
     }
 
-    // 2. Check Custom Events
-    for (const event of events) {
-      let eventSolarDate: string | null = null;
-      if (event.calendarType === 'lunar') {
-        if (event.lunarMonth && event.lunarDay) {
-          try {
-            const lunarMonth = event.lunarIsLeapMonth ? -event.lunarMonth : event.lunarMonth;
-            eventSolarDate = Lunar.fromYmd(currentYear, lunarMonth, event.lunarDay).getSolar().toYmd();
-          } catch { /* skip */ }
-        }
-      } else {
-        if (event.recurrence === 'yearly') {
-          const monthDay = event.date.slice(5);
-          eventSolarDate = `${currentYear}-${monthDay}`;
-        } else {
-          eventSolarDate = event.date;
-        }
-      }
-
-      if (eventSolarDate) {
-        const diff = Math.ceil((new Date(`${eventSolarDate}T00:00:00`).getTime() - new Date(`${todayStr}T00:00:00`).getTime()) / (1000 * 3600 * 24));
-        if (diff >= 0 && diff <= 7) {
-          list.push({
-            id: `event-${event.id}`,
-            text: `${diff === 0 ? '今天' : diff + ' 天后'}是：${event.name}`,
-            icon: event.icon,
-            type: 'event'
-          });
-        }
-      }
-    }
-
-    // 3. Check Holidays
     if (currentYear === 2026) {
       for (const range of chinaHolidayRanges2026) {
-        const diff = Math.ceil((new Date(`${range.start}T00:00:00`).getTime() - new Date(`${todayStr}T00:00:00`).getTime()) / (1000 * 3600 * 24));
+        const diff = daysBetween(today, range.start);
         if (diff >= 0 && diff <= 7) {
           list.push({
             id: `holiday-${range.name}`,
-            text: `${diff === 0 ? '今天' : diff + ' 天后'}开始：${range.name}`,
+            text: `${diff === 0 ? '今天' : `${diff} 天后`}开始：${range.name}`,
             icon: range.icon,
-            type: 'holiday'
+            type: 'holiday',
           });
         }
       }
@@ -111,41 +124,59 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
   }, [events, period]);
 
   useEffect(() => {
-    const finalVisible = isVisible && notifications.length > 0;
-    onVisibilityChange?.(finalVisible);
-  }, [isVisible, notifications, onVisibilityChange]);
+    onVisibilityChange?.(isVisible && notifications.length > 0);
+  }, [isVisible, notifications.length, onVisibilityChange]);
 
   if (!isVisible || notifications.length === 0) return null;
 
+  const marqueeItems = notifications.length === 1 ? [...notifications, ...notifications, ...notifications, ...notifications] : notifications;
+  const marqueePairs = Array.from({ length: Math.ceil(marqueeItems.length / 2) }, (_, index) => {
+    const first = marqueeItems[index * 2];
+    const second = marqueeItems[index * 2 + 1] ?? marqueeItems[0];
+    return [first, second];
+  });
+
   return (
-    <div className="relative z-[60] bg-kuromi-black text-white px-4 py-2 overflow-hidden flex items-center h-10 shadow-lg border-b border-white/10">
-      <div className="flex-1 flex items-center justify-center gap-12 animate-marquee whitespace-nowrap">
-        {/* Duplicate list to ensure seamless marquee if short */}
-        {[...notifications, ...notifications].map((note, i) => (
-          <div key={`${note.id}-${i}`} className="flex items-center gap-2">
-            <span className="text-lg">{note.icon}</span>
-            <span className="text-sm font-bold tracking-tight">{note.text}</span>
-            <span className="mx-6 opacity-30 text-kuromi-purple">•</span>
-          </div>
-        ))}
+    <div className="relative z-[60] flex h-10 items-center overflow-hidden border-b border-white/10 bg-kuromi-black text-white shadow-lg">
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="marquee-track flex w-max whitespace-nowrap">
+          {[0, 1].map((groupIndex) => (
+            <div key={groupIndex} className="flex min-w-screen shrink-0 items-center justify-around gap-10 pr-10">
+              {marqueePairs.map((pair, pairIndex) => (
+                <div key={`${groupIndex}-pair-${pairIndex}`} className="flex items-center gap-5">
+                  {pair.map((note, itemIndex) => (
+                    <div key={`${note.id}-${pairIndex}-${itemIndex}`} className="flex items-center gap-2">
+                      <span className="text-lg">{note.icon}</span>
+                      <span className="text-sm font-bold tracking-tight">{note.text}</span>
+                    </div>
+                  ))}
+                  <span className="mx-2 text-kuromi-purple/50">•</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-      <button 
+
+      <button
         onClick={() => setIsVisible(false)}
-        className="ml-4 p-1 hover:bg-white/20 rounded-full transition-colors shrink-0"
+        className="relative z-10 mr-3 ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black transition-colors hover:bg-white/20"
         aria-label="关闭公告"
       >
-        <span className="text-xs">✕</span>
+        ×
       </button>
-      
+
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes seamless-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
+
+        .marquee-track {
+          animation: seamless-marquee 28s linear infinite;
         }
-        .animate-marquee:hover {
+
+        .marquee-track:hover {
           animation-play-state: paused;
         }
       `}</style>

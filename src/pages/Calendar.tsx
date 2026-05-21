@@ -156,7 +156,7 @@ function markerClass(kind: CalendarMarker['kind']) {
 function getPhaseLabel(phase?: PeriodPhase) {
   if (phase === 'menstrual') return '经期';
   if (phase === 'follicular') return '卵泡期';
-  if (phase === 'ovulation') return '排卵日';
+  if (phase === 'ovulation') return '排卵期';
   if (phase === 'luteal') return '黄体期';
   return null;
 }
@@ -167,6 +167,22 @@ function getPhaseStyles(phase?: PeriodPhase) {
   if (phase === 'ovulation') return 'bg-yellow-100/50 border-yellow-200';
   if (phase === 'luteal') return 'bg-blue-50/50 border-blue-100';
   return 'bg-white/50 border-white/50';
+}
+
+function getPhaseMobileBackground(phase?: PeriodPhase) {
+  if (phase === 'menstrual') return 'bg-pink-100';
+  if (phase === 'follicular') return 'bg-purple-50';
+  if (phase === 'ovulation') return 'bg-yellow-100';
+  if (phase === 'luteal') return 'bg-blue-50';
+  return '';
+}
+
+function getSelectedPhaseMobileBackground(phase?: PeriodPhase) {
+  if (phase === 'menstrual') return 'bg-kuromi-pink';
+  if (phase === 'follicular') return 'bg-kuromi-purple';
+  if (phase === 'ovulation') return 'bg-yellow-500';
+  if (phase === 'luteal') return 'bg-blue-500';
+  return 'bg-kuromi-purple';
 }
 
 const Calendar: React.FC = () => {
@@ -197,6 +213,9 @@ const Calendar: React.FC = () => {
     if (!periodData || periodData.records.length === 0) return phases;
 
     const { cycleDays, periodDays } = periodData.config;
+    const ovulationDay = cycleDays - 13;
+    const ovulationWindowStartDay = Math.max(periodDays + 1, ovulationDay - 5);
+    const ovulationWindowEndDay = Math.min(cycleDays, ovulationDay + 1);
     const sortedRecords = [...periodData.records].sort((a, b) => b.startDate.localeCompare(a.startDate));
     const gridStart = calendarDays.find((day) => day !== null);
     const gridEnd = [...calendarDays].reverse().find((day) => day !== null);
@@ -216,8 +235,8 @@ const Calendar: React.FC = () => {
       const dayInCycle = (daysSinceStart % cycleDays) + 1;
 
       if (dayInCycle <= periodDays) phases.set(currentStr, 'menstrual');
-      else if (dayInCycle < Math.floor(cycleDays / 2)) phases.set(currentStr, 'follicular');
-      else if (dayInCycle === Math.floor(cycleDays / 2)) phases.set(currentStr, 'ovulation');
+      else if (dayInCycle >= ovulationWindowStartDay && dayInCycle <= ovulationWindowEndDay) phases.set(currentStr, 'ovulation');
+      else if (dayInCycle < ovulationWindowStartDay) phases.set(currentStr, 'follicular');
       else phases.set(currentStr, 'luteal');
     }
 
@@ -422,36 +441,61 @@ const Calendar: React.FC = () => {
             const dateKey = day ? toDateKey(day) : '';
             const markers = dateKey ? markersByDate.get(dateKey) ?? [] : [];
             const phase = dateKey ? phasesByDate.get(dateKey) : undefined;
+            const phaseMobileBackground = getPhaseMobileBackground(phase);
             const isToday = dateKey === toDateKey(new Date());
             const isSelected = dateKey === selectedDate;
 
             return (
-              <button
-                key={`${dateKey}-${index}`}
-                type="button"
-                onClick={() => day && setSelectedDate(dateKey)}
-                className={`min-h-16 rounded-xl border p-1.5 text-left transition-colors md:min-h-20 ${
-                  day ? `${getPhaseStyles(phase)} hover:bg-white/80` : 'pointer-events-none border-white/20 bg-white/20'
-                } ${isToday ? 'ring-2 ring-kuromi-pink' : ''} ${isSelected ? 'outline outline-2 outline-kuromi-purple' : ''}`}
-              >
-                {day && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-black md:text-sm ${isToday ? 'text-kuromi-pink' : 'text-gray-500'}`}>{day.getDate()}</span>
-                      {markers.length > 0 && <span className="text-[9px] font-black text-kuromi-purple">{markers.length}</span>}
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      {markers.slice(0, 2).map((marker) => (
-                        <div key={marker.id} title={marker.description ?? marker.name} className={`truncate rounded-lg border px-1.5 py-0.5 text-[9px] font-bold md:text-[10px] ${markerClass(marker.kind)}`}>
-                          <span className="mr-1">{marker.icon}</span>
-                          {marker.name}
-                        </div>
-                      ))}
-                      {markers.length > 2 && <div className="px-1 text-[9px] font-bold text-gray-400">+{markers.length - 2}</div>}
-                    </div>
-                  </>
-                )}
-              </button>
+              <React.Fragment key={`${dateKey}-${index}`}>
+                <button
+                  type="button"
+                  onClick={() => day && setSelectedDate(dateKey)}
+                  className={`flex min-h-14 flex-col items-center justify-center gap-1 bg-transparent p-0 text-center md:hidden ${
+                    day ? '' : 'pointer-events-none opacity-0'
+                  }`}
+                >
+                  {day && (
+                    <>
+                      <span
+                        className={`relative flex h-9 w-9 items-center justify-center rounded-full text-sm font-black ${
+                          isSelected ? `${getSelectedPhaseMobileBackground(phase)} text-white shadow-kuromi` : `${phaseMobileBackground} ${isToday ? 'text-kuromi-pink' : 'text-gray-600'}`
+                        }`}
+                      >
+                        {day.getDate()}
+                      </span>
+                      <span className="flex h-2 items-center justify-center gap-1">
+                        <span className={`h-1.5 w-1.5 rounded-full ${markers.length > 0 ? 'bg-kuromi-purple' : 'bg-transparent'}`} />
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => day && setSelectedDate(dateKey)}
+                  className={`hidden min-h-20 rounded-xl border p-1.5 text-left transition-colors md:block ${
+                    day ? `${getPhaseStyles(phase)} hover:bg-white/80` : 'pointer-events-none border-white/20 bg-white/20'
+                  } ${isToday ? 'ring-2 ring-kuromi-pink' : ''} ${isSelected ? 'outline outline-2 outline-kuromi-purple' : ''}`}
+                >
+                  {day && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm font-black ${isToday ? 'text-kuromi-pink' : 'text-gray-500'}`}>{day.getDate()}</span>
+                        {markers.length > 0 && <span className="text-[9px] font-black text-kuromi-purple">{markers.length}</span>}
+                      </div>
+                      <div className="mt-1 space-y-0.5">
+                        {markers.slice(0, 2).map((marker) => (
+                          <div key={marker.id} title={marker.description ?? marker.name} className={`truncate rounded-lg border px-1.5 py-0.5 text-[10px] font-bold ${markerClass(marker.kind)}`}>
+                            <span className="mr-1">{marker.icon}</span>
+                            {marker.name}
+                          </div>
+                        ))}
+                        {markers.length > 2 && <div className="px-1 text-[9px] font-bold text-gray-400">+{markers.length - 2}</div>}
+                      </div>
+                    </>
+                  )}
+                </button>
+              </React.Fragment>
             );
           })}
         </div>

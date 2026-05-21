@@ -63,6 +63,13 @@ export type PeriodData = {
   prediction: {
     nextStartDate: string | null;
     daysUntilNext: number | null;
+    ovulationDate: string | null;
+    ovulationWindowStart: string | null;
+    ovulationWindowEnd: string | null;
+    daysUntilOvulation: number | null;
+    daysUntilOvulationWindow: number | null;
+    currentPhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | null;
+    currentPhaseLabel: string | null;
   };
 };
 
