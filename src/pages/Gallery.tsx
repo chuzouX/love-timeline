@@ -203,7 +203,7 @@ const Gallery: React.FC = () => {
                 onWheel={() => pauseAutoScroll()}
                 className={
                   showAll
-                    ? 'grid max-h-[70vh] grid-cols-3 gap-2 overflow-y-auto p-1 sm:grid-cols-3 md:grid-cols-3 md:gap-3 lg:grid-cols-4'
+                    ? 'grid max-h-[70vh] grid-cols-2 gap-2 overflow-y-auto p-1 sm:grid-cols-3 md:grid-cols-3 md:gap-3 lg:grid-cols-4'
                     : 'flex min-w-0 snap-x snap-mandatory items-center gap-2 overflow-x-auto scroll-smooth touch-pan-x no-scrollbar md:gap-4'
                 }
               >
@@ -211,7 +211,7 @@ const Gallery: React.FC = () => {
                   <button
                     key={image.id}
                     onClick={() => openImage(image)}
-                    className={`${getWidthClass(image)} h-36 shrink-0 snap-center overflow-hidden rounded-2xl bg-white/60 shadow-kuromi transition-all hover:scale-[1.02] hover:shadow-kuromi-lg md:h-64`}
+                    className={`${showAll ? 'w-full' : getWidthClass(image)} h-36 shrink-0 snap-center overflow-hidden rounded-2xl bg-white/60 shadow-kuromi transition-all hover:scale-[1.02] hover:shadow-kuromi-lg md:h-64`}
                     title={image.originalName}
                   >
                     <img src={image.url} alt={image.originalName} className="h-full w-full object-cover" draggable={false} />
