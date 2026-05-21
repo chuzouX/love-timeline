@@ -136,11 +136,16 @@ const Gallery: React.FC = () => {
   return (
     <div className="min-w-0 space-y-5 animate-fadeIn">
       <div className="flex min-w-0 flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div className="min-w-0 space-y-2">
-          <h2 className="text-3xl font-black text-kuromi-black md:text-5xl">甜蜜画廊</h2>
-          <p className="text-sm font-medium text-gray-500 sm:text-base">记录我们每一个心动瞬间</p>
-          {error && <p className="text-sm font-bold text-red-500">{error}</p>}
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-kuromi-purple/10 md:h-16 md:w-16">
+            <img src="/assets/stickers/clean_11.png" alt="icon" className="h-10 w-10 object-contain" />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <h2 className="text-3xl font-black text-kuromi-black md:text-5xl">甜蜜画廊</h2>
+            <p className="text-sm font-medium text-gray-500 sm:text-base">记录我们每一个心动瞬间</p>
+          </div>
         </div>
+        {error && <p className="text-sm font-bold text-red-500">{error}</p>}
         <button onClick={openUpload} className="w-full rounded-xl bg-kuromi-purple/10 px-5 py-3 font-bold text-kuromi-purple transition-all hover:bg-kuromi-purple/20 sm:w-auto">
           上传照片 +
         </button>

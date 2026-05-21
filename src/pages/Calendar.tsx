@@ -395,11 +395,16 @@ const Calendar: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-kuromi-black md:text-5xl">重要日子</h2>
-          <p className="font-medium text-gray-500">点击日历某一天，在下方查看当天日程或创建新日程。</p>
-          {error && <p className="text-sm font-bold text-red-500">{error}</p>}
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-kuromi-purple/10 md:h-16 md:w-16">
+            <img src="/assets/stickers/clean_01.png" alt="icon" className="h-10 w-10 object-contain" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-3xl font-black text-kuromi-black md:text-5xl">重要日子</h2>
+            <p className="font-medium text-gray-500">点击日历某一天，在下方查看当天日程或创建新日程。</p>
+          </div>
         </div>
+        {error && <p className="text-sm font-bold text-red-500">{error}</p>}
         <button onClick={() => void upsertEvent(undefined, selectedDate)} className="flex items-center justify-center gap-2 rounded-xl bg-kuromi-purple/10 px-6 py-3 font-bold text-kuromi-purple transition-all hover:bg-kuromi-purple/20">
           添加新日子 <span className="text-xl">+</span>
         </button>
