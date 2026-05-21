@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import NotificationBanner from './NotificationBanner';
 
 const navItems = [
@@ -11,6 +11,17 @@ const navItems = [
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('kuromi_theme') ?? 'light');
+  const isDark = theme === 'dark';
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('kuromi_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  };
 
   return (
     <div className="relative min-h-screen w-full max-w-full overflow-x-clip selection:bg-kuromi-pink/30">
@@ -30,12 +41,22 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
         <NotificationBanner onVisibilityChange={setIsBannerVisible} />
         <header className="glass-nav flex h-16 items-center px-3 shadow-md sm:px-4 md:h-20 md:px-8">
-          <a href="#home" className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kuromi-black shadow-lg md:h-12 md:w-12">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`theme-toggle-logo flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-lg transition-all active:scale-95 md:h-12 md:w-12 ${
+                isDark ? 'bg-kuromi-purple ring-2 ring-white/30' : 'bg-kuromi-black'
+              }`}
+              aria-label={isDark ? '切换到日间模式' : '切换到夜间模式'}
+              title={isDark ? '切换到日间模式' : '切换到夜间模式'}
+            >
               <img src="/assets/stickers/clean_02.png" alt="logo" className="h-8 w-8 object-contain" />
-            </div>
-            <img src="/assets/titles/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="hidden h-8 max-w-44 object-contain sm:block md:h-10" />
-          </a>
+            </button>
+            <a href="#home" className="min-w-0">
+              <img src="/assets/titles/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="hidden h-8 max-w-44 object-contain sm:block md:h-10" />
+            </a>
+          </div>
 
           <nav className="ml-auto hidden items-center gap-2 md:flex">
             {navItems.map((item) => (
