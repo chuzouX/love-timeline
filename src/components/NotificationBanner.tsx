@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Lunar } from 'lunar-javascript';
 import { getEvents, getPeriod, type EventItem, type PeriodData } from '../api/client';
 
@@ -38,6 +38,7 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [period, setPeriod] = useState<PeriodData | null>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const lastTapRef = useRef(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,6 +130,16 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
 
   if (!isVisible || notifications.length === 0) return null;
 
+  const closeBanner = () => setIsVisible(false);
+
+  const handleBannerPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'touch') return;
+
+    const now = performance.now();
+    if (now - lastTapRef.current < 340) closeBanner();
+    lastTapRef.current = now;
+  };
+
   const marqueeItems = notifications.length === 1 ? [...notifications, ...notifications, ...notifications, ...notifications] : notifications;
   const marqueePairs = Array.from({ length: Math.ceil(marqueeItems.length / 2) }, (_, index) => {
     const first = marqueeItems[index * 2];
@@ -137,7 +148,12 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
   });
 
   return (
-    <div className="relative z-[60] flex h-10 items-center overflow-hidden border-b border-white/10 bg-[#0e0a16] text-white shadow-lg">
+    <div
+      className="relative z-[60] flex h-10 touch-manipulation items-center overflow-hidden border-b border-white/10 bg-[#0e0a16] text-white shadow-lg"
+      onDoubleClick={closeBanner}
+      onPointerUp={handleBannerPointerUp}
+      title="双击关闭公告"
+    >
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="marquee-track flex w-max whitespace-nowrap">
           {[0, 1].map((groupIndex) => (
@@ -159,8 +175,8 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
       </div>
 
       <button
-        onClick={() => setIsVisible(false)}
-        className="relative z-10 mr-3 ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black transition-colors hover:bg-white/20"
+        onClick={closeBanner}
+        className="relative z-10 mr-3 ml-2 hidden h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black transition-colors hover:bg-white/20 md:flex"
         aria-label="关闭公告"
       >
         ×

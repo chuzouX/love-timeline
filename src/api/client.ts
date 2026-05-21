@@ -87,9 +87,10 @@ export type GalleryImage = {
 };
 
 const tokenKey = 'kuromi_api_token';
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseURL,
 });
 
 api.interceptors.request.use((config) => {
