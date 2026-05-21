@@ -137,7 +137,7 @@ const Schedule: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
         <div className="flex items-center gap-6">
           <div className="w-16 h-16 rounded-3xl bg-kuromi-purple/10 flex items-center justify-center shadow-inner">
-            <img src="/assets/贴纸/clean_12.png" alt="icon" className="h-10 w-10 animate-float" />
+            <img src="/assets/stickers/clean_12.png" alt="icon" className="h-10 w-10 animate-float" />
           </div>
           <div className="space-y-1">
             <h2 className="text-3xl md:text-5xl font-black text-kuromi-black tracking-tighter">两人的课程表</h2>
@@ -205,12 +205,12 @@ const Schedule: React.FC = () => {
       </div>
 
       <div className="flex justify-between items-end px-4 mt-4">
-        <img src="/assets/贴纸/clean_13.png" alt="" className="h-16 md:h-24 animate-float opacity-80" />
+        <img src="/assets/stickers/clean_13.png" alt="" className="h-16 md:h-24 animate-float opacity-80" />
         <div className="relative group mb-4">
           <div className="absolute -top-16 -left-16 bg-white p-4 rounded-3xl shadow-2xl text-xs md:text-sm font-black text-kuromi-purple border border-purple-50 opacity-0 group-hover:opacity-100 transition-all -translate-y-2 group-hover:translate-y-0 whitespace-nowrap">
             🍦 嘿！下课请你吃冰淇淋~
           </div>
-          <img src="/assets/人物/kuromi_clean_05.png" alt="Kuromi" className="h-28 md:h-44 object-contain cursor-pointer transform transition-transform group-hover:scale-110" />
+          <img src="/assets/characters/kuromi_clean_05.png" alt="Kuromi" className="h-28 md:h-44 object-contain cursor-pointer transform transition-transform group-hover:scale-110" />
         </div>
       </div>
     </div>

@@ -161,6 +161,14 @@ function getPhaseLabel(phase?: PeriodPhase) {
   return null;
 }
 
+function getPhaseStyles(phase?: PeriodPhase) {
+  if (phase === 'menstrual') return 'bg-pink-100/50 border-pink-200';
+  if (phase === 'follicular') return 'bg-purple-50/50 border-purple-100';
+  if (phase === 'ovulation') return 'bg-yellow-100/50 border-yellow-200';
+  if (phase === 'luteal') return 'bg-blue-50/50 border-blue-100';
+  return 'bg-white/50 border-white/50';
+}
+
 const Calendar: React.FC = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [periodData, setPeriodData] = useState<PeriodData | null>(null);
@@ -255,7 +263,7 @@ const Calendar: React.FC = () => {
   const selectedDetailMarkers: CalendarMarker[] = selectedPhaseLabel
     ? [{ id: `period-${selectedDate}`, name: selectedPhaseLabel, icon: '🎀', kind: 'period' }, ...selectedMarkers]
     : selectedMarkers;
-  const selectedCustomEvents = selectedMarkers.flatMap((marker) => (marker.event ? [marker.event] : []));
+  const sortedEvents = useMemo(() => [...events].sort((a, b) => a.sortOrder - b.sortOrder || a.date.localeCompare(b.date)), [events]);
 
   const loadData = async () => {
     try {
@@ -332,6 +340,39 @@ const Calendar: React.FC = () => {
     await loadData();
   };
 
+  const renderEventCard = (event: EventItem) => (
+    <div key={event.id} className="group relative overflow-hidden rounded-[1.5rem] p-4 transition-all duration-500 glass-panel hover:shadow-kuromi md:rounded-[2.5rem] md:p-8">
+      <div className={`absolute -right-4 -bottom-4 h-24 w-24 rounded-full opacity-10 transition-transform duration-700 group-hover:scale-150 ${event.color}`} />
+      <div className="relative z-10 flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-5xl">{event.icon}</span>
+          <span className="rounded-full border border-white/50 bg-white/50 px-3 py-1 text-sm font-bold text-gray-400">{event.tag}</span>
+        </div>
+        <div>
+          <h3 className="text-2xl font-black text-kuromi-black transition-colors group-hover:text-kuromi-purple">{event.name}</h3>
+          <p className="mt-1 text-sm text-gray-400">{event.description}</p>
+        </div>
+        <div className="mt-2 flex items-end justify-between gap-4 border-t border-gray-100 pt-4">
+          <div className="min-w-0">
+            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Date</span>
+            <p className="text-xl font-black text-kuromi-pink">{describeEventDate(event)}</p>
+            <p className="text-xs font-bold text-gray-400">
+              {describeEventTime(event)} · {event.recurrence === 'yearly' ? '每年触发' : '仅一次'}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button onClick={() => void upsertEvent(event)} className="rounded-xl bg-kuromi-purple/10 px-3 py-2 text-xs font-black text-kuromi-purple transition-all hover:bg-kuromi-purple hover:text-white">
+              编辑
+            </button>
+            <button onClick={() => void removeEvent(event)} className="rounded-xl bg-pink-50 px-3 py-2 text-xs font-black text-kuromi-pink transition-all hover:bg-kuromi-pink hover:text-white">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -356,6 +397,21 @@ const Calendar: React.FC = () => {
           </button>
         </div>
 
+        <div className="flex flex-wrap gap-4 px-2 pb-2 text-[10px] font-bold text-gray-500 md:text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full border border-pink-200 bg-pink-100" /> 经期
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full border border-purple-100 bg-purple-50" /> 卵泡期
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full border border-yellow-200 bg-yellow-100" /> 排卵日
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full border border-blue-100 bg-blue-50" /> 黄体期
+          </div>
+        </div>
+
         <div className="grid grid-cols-7 gap-1.5 text-center">
           {weekDays.map((day) => (
             <div key={day} className="py-1 text-[11px] font-black text-kuromi-dark-purple md:text-xs">
@@ -365,6 +421,7 @@ const Calendar: React.FC = () => {
           {calendarDays.map((day, index) => {
             const dateKey = day ? toDateKey(day) : '';
             const markers = dateKey ? markersByDate.get(dateKey) ?? [] : [];
+            const phase = dateKey ? phasesByDate.get(dateKey) : undefined;
             const isToday = dateKey === toDateKey(new Date());
             const isSelected = dateKey === selectedDate;
 
@@ -374,7 +431,7 @@ const Calendar: React.FC = () => {
                 type="button"
                 onClick={() => day && setSelectedDate(dateKey)}
                 className={`min-h-16 rounded-xl border p-1.5 text-left transition-colors md:min-h-20 ${
-                  day ? 'border-white/50 bg-white/50 hover:bg-white/80' : 'pointer-events-none border-white/20 bg-white/20'
+                  day ? `${getPhaseStyles(phase)} hover:bg-white/80` : 'pointer-events-none border-white/20 bg-white/20'
                 } ${isToday ? 'ring-2 ring-kuromi-pink' : ''} ${isSelected ? 'outline outline-2 outline-kuromi-purple' : ''}`}
               >
                 {day && (
@@ -442,32 +499,17 @@ const Calendar: React.FC = () => {
         </div>
       </section>
 
-      {selectedCustomEvents.length > 0 && (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {selectedCustomEvents.map((event) => (
-            <div key={event.id} className="relative overflow-hidden rounded-[1.5rem] p-4 glass-panel md:p-6">
-              <div className={`absolute -right-4 -bottom-4 h-24 w-24 rounded-full opacity-10 ${event.color}`} />
-              <div className="relative z-10 space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-4xl">{event.icon}</span>
-                  <span className="rounded-full border border-white/50 bg-white/50 px-3 py-1 text-sm font-bold text-gray-400">{event.tag}</span>
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-kuromi-black">{event.name}</h3>
-                  <p className="mt-1 text-sm text-gray-400">{event.description}</p>
-                </div>
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Date</p>
-                  <p className="text-xl font-black text-kuromi-pink">{describeEventDate(event)}</p>
-                  <p className="text-xs font-bold text-gray-400">
-                    {describeEventTime(event)} · {event.recurrence === 'yearly' ? '每年触发' : '仅一次'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <h3 className="text-2xl font-black text-kuromi-black">全部重要日子</h3>
+          <span className="text-sm font-bold text-gray-400">{sortedEvents.length} 个</span>
+        </div>
+        {sortedEvents.length === 0 ? (
+          <p className="rounded-2xl bg-white/50 p-4 text-center text-sm font-bold text-gray-400">还没有添加重要日子。</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">{sortedEvents.map(renderEventCard)}</div>
+        )}
+      </section>
     </div>
   );
 };

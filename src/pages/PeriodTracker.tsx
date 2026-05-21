@@ -84,7 +84,7 @@ const PeriodTracker: React.FC = () => {
     <div className="space-y-10 animate-fadeIn h-full flex flex-col">
       <div className="flex items-center gap-6">
         <div className="w-16 h-16 rounded-3xl bg-kuromi-pink/10 flex items-center justify-center">
-          <img src="/assets/贴纸/clean_09.png" alt="icon" className="h-10 w-10" />
+          <img src="/assets/stickers/clean_09.png" alt="icon" className="h-10 w-10" />
         </div>
         <div className="space-y-1">
           <h2 className="text-3xl md:text-5xl font-black text-kuromi-black">暖心关怀</h2>
@@ -115,7 +115,7 @@ const PeriodTracker: React.FC = () => {
               <span className="text-6xl md:text-8xl font-black text-kuromi-pink">{daysUntilNext}</span>
               <span className="text-gray-400 text-sm font-bold uppercase tracking-widest">Days</span>
             </div>
-            <img src="/assets/贴纸/clean_10.png" alt="" className="absolute -top-4 -left-4 w-16 animate-float" />
+            <img src="/assets/stickers/clean_10.png" alt="" className="absolute -top-4 -left-4 w-16 animate-float" />
           </div>
 
           <div className="flex-1 space-y-6 w-full">
@@ -161,7 +161,7 @@ const PeriodTracker: React.FC = () => {
               </div>
             ))}
           </div>
-          <img src="/assets/人物/kuromi_clean_15.png" alt="" className="h-40 object-contain self-center animate-float" />
+          <img src="/assets/characters/kuromi_clean_15.png" alt="" className="h-40 object-contain self-center animate-float" />
         </div>
       </div>
     </div>

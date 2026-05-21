@@ -86,10 +86,10 @@ const Home: React.FC = () => {
               className="relative z-10 h-56 w-56 max-w-[72vw] overflow-hidden rounded-full border-4 border-white shadow-2xl glass-panel sm:h-64 sm:w-64 md:h-80 md:w-80 lg:h-96 lg:w-96"
               onClick={changeKuromi}
             >
-              <img src={`/assets/人物/kuromi_clean_${randomKuromi}.png`} alt="Kuromi" className="h-full w-full object-contain p-6 transition-transform duration-500 hover:scale-110 sm:p-8" />
+              <img src={`/assets/characters/kuromi_clean_${randomKuromi}.png`} alt="Kuromi" className="h-full w-full object-contain p-6 transition-transform duration-500 hover:scale-110 sm:p-8" />
             </button>
-            <img src="/assets/贴纸/clean_07.png" alt="" className="absolute -right-3 -top-4 w-12 animate-float sm:-right-6 sm:-top-6 sm:w-16" />
-            <img src="/assets/贴纸/clean_08.png" alt="" className="absolute -bottom-4 -left-3 w-12 animate-float sm:-bottom-6 sm:-left-6 sm:w-16" style={{ animationDelay: '0.5s' }} />
+            <img src="/assets/stickers/clean_07.png" alt="" className="absolute -right-3 -top-4 w-12 animate-float sm:-right-6 sm:-top-6 sm:w-16" />
+            <img src="/assets/stickers/clean_08.png" alt="" className="absolute -bottom-4 -left-3 w-12 animate-float sm:-bottom-6 sm:-left-6 sm:w-16" style={{ animationDelay: '0.5s' }} />
           </div>
         </div>
       </div>

@@ -235,7 +235,7 @@ const Gallery: React.FC = () => {
           <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-white/90 shadow-2xl glass-panel md:rounded-[2.5rem]" onClick={(event) => event.stopPropagation()}>
             <div className="flex min-w-0 items-center justify-between border-b border-gray-100 bg-white/50 px-4 py-3 md:px-6 md:py-4">
               <div className="flex min-w-0 items-center gap-3">
-                <img src="/assets/贴纸/clean_08.png" alt="" className="h-6 w-6 shrink-0 object-contain" />
+                <img src="/assets/stickers/clean_08.png" alt="" className="h-6 w-6 shrink-0 object-contain" />
                 <span className="min-w-0 truncate font-black text-kuromi-black">{selectedImage.originalName}</span>
               </div>
               <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-100 hover:text-kuromi-purple" onClick={() => setSelectedImage(null)}>

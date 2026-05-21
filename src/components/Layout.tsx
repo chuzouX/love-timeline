@@ -17,14 +17,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <div className="bg-mesh" />
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-50 mix-blend-overlay"
-        style={{ backgroundImage: 'url("/assets/背景/image-gen-2.png")' }}
+        style={{ backgroundImage: 'url("/assets/backgrounds/image-gen-2.png")' }}
       />
 
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[5%] left-[8%] h-24 w-24 rounded-full bg-kuromi-purple/20 blur-3xl animate-pulse-soft md:h-32 md:w-32" />
         <div className="absolute bottom-[10%] right-[8%] h-32 w-32 rounded-full bg-kuromi-pink/20 blur-3xl animate-pulse-soft md:h-48 md:w-48" style={{ animationDelay: '2s' }} />
-        <img src="/assets/贴纸/clean_03.png" alt="" className="absolute top-[12%] left-[4%] w-12 animate-float opacity-70 md:w-20" />
-        <img src="/assets/贴纸/clean_04.png" alt="" className="absolute top-[20%] right-[6%] w-10 animate-float opacity-70 md:w-16" style={{ animationDelay: '1s' }} />
+        <img src="/assets/stickers/clean_03.png" alt="" className="absolute top-[12%] left-[4%] w-12 animate-float opacity-70 md:w-20" />
+        <img src="/assets/stickers/clean_04.png" alt="" className="absolute top-[20%] right-[6%] w-10 animate-float opacity-70 md:w-16" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
@@ -32,9 +32,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <header className="glass-nav flex h-16 items-center px-3 shadow-md sm:px-4 md:h-20 md:px-8">
           <a href="#home" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kuromi-black shadow-lg md:h-12 md:w-12">
-              <img src="/assets/贴纸/clean_02.png" alt="logo" className="h-8 w-8 object-contain" />
+              <img src="/assets/stickers/clean_02.png" alt="logo" className="h-8 w-8 object-contain" />
             </div>
-            <img src="/assets/标题/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="hidden h-8 max-w-44 object-contain sm:block md:h-10" />
+            <img src="/assets/titles/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="hidden h-8 max-w-44 object-contain sm:block md:h-10" />
           </a>
 
           <nav className="ml-auto hidden items-center gap-2 md:flex">
@@ -53,7 +53,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </nav>
 
           <div className="flex flex-1 justify-center md:hidden">
-            <img src="/assets/标题/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="h-8 max-w-[52vw] object-contain" />
+            <img src="/assets/titles/kuromi_text_clean_02_face_fixed.png" alt="Kuromi" className="h-8 max-w-[52vw] object-contain" />
           </div>
         </header>
       </div>
