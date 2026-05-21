@@ -137,7 +137,7 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
   });
 
   return (
-    <div className="relative z-[60] flex h-10 items-center overflow-hidden border-b border-white/10 bg-kuromi-black text-white shadow-lg">
+    <div className="relative z-[60] flex h-10 items-center overflow-hidden border-b border-white/10 bg-[#0e0a16] text-white shadow-lg">
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="marquee-track flex w-max whitespace-nowrap">
           {[0, 1].map((groupIndex) => (
@@ -146,11 +146,11 @@ const NotificationBanner: React.FC<Props> = ({ onVisibilityChange }) => {
                 <div key={`${groupIndex}-pair-${pairIndex}`} className="flex items-center gap-5">
                   {pair.map((note, itemIndex) => (
                     <div key={`${note.id}-${pairIndex}-${itemIndex}`} className="flex items-center gap-2">
-                      <span className="text-lg">{note.icon}</span>
-                      <span className="text-sm font-bold tracking-tight">{note.text}</span>
+                      <span className="text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">{note.icon}</span>
+                      <span className="text-sm font-bold tracking-tight text-white/95 drop-shadow-[0_0_5px_rgba(168,85,247,0.3)]">{note.text}</span>
                     </div>
                   ))}
-                  <span className="mx-2 text-kuromi-purple/50">•</span>
+                  <span className="mx-2 text-kuromi-purple/40">•</span>
                 </div>
               ))}
             </div>

@@ -64,13 +64,13 @@ const Home: React.FC = () => {
           <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap lg:justify-start">
             <button
               onClick={changeStartDate}
-              className="w-full rounded-2xl bg-kuromi-purple px-6 py-3.5 font-bold text-white shadow-kuromi transition-all active:scale-95 sm:w-auto sm:px-8 sm:py-4"
+              className="btn-kuromi w-full rounded-2xl bg-kuromi-purple px-6 py-3.5 font-bold text-white shadow-kuromi transition-all active:scale-95 sm:w-auto sm:px-8 sm:py-4"
             >
               修改起始日
             </button>
             <a
               href="#gallery"
-              className="w-full rounded-2xl border-2 border-kuromi-purple/20 bg-white px-6 py-3.5 text-center font-bold text-kuromi-purple transition-all hover:bg-kuromi-purple/5 sm:w-auto sm:px-8 sm:py-4"
+              className="w-full rounded-2xl border-2 border-kuromi-purple/20 bg-white/70 px-6 py-3.5 text-center font-bold text-kuromi-purple transition-all hover:bg-kuromi-purple/5 hover:border-kuromi-purple/40 backdrop-blur-sm sm:w-auto sm:px-8 sm:py-4"
             >
               查看相册
             </a>
