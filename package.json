@@ -9,7 +9,7 @@
     "server:start": "node --import tsx server/index.ts",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "tsc -b && vite build",
-    "compress": "python scripts/compress_images.py server/uploads/gallery --in-place",
+    "compress": "node scripts/run_compress.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
