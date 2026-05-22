@@ -15,6 +15,7 @@ dist-ssr
 .env
 server/data
 server/uploads
+backups/
 
 # Gallery uploads are local user photos and must not be committed.
 server/uploads/gallery/

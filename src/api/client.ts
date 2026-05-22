@@ -89,6 +89,8 @@ export type GalleryImage = {
 const tokenKey = 'kuromi_api_token';
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 const galleryFilePath = '/gallery/files/';
+const galleryImageMaxSide = 1600;
+const galleryImageQuality = 0.78;
 
 export const api = axios.create({
   baseURL: apiBaseURL,
@@ -114,6 +116,47 @@ function normalizeGalleryImage(image: GalleryImage): GalleryImage {
     ...image,
     url: resolveApiAssetURL(filePath),
   };
+}
+
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    const url = URL.createObjectURL(file);
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Unable to load image'));
+    };
+    image.src = url;
+  });
+}
+
+async function compressGalleryImage(file: File) {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+
+  const image = await loadImage(file);
+  const scale = Math.min(1, galleryImageMaxSide / Math.max(image.naturalWidth, image.naturalHeight));
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) return file;
+
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, 'image/jpeg', galleryImageQuality);
+  });
+  if (!blob || blob.size >= file.size) return file;
+
+  const filename = file.name.replace(/\.[^.]+$/, '') || 'gallery-image';
+  return new File([blob], `${filename}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
 }
 
 api.interceptors.request.use((config) => {
@@ -179,7 +222,7 @@ export async function getGalleryImages() {
 
 export async function uploadGalleryImage(file: File) {
   const form = new FormData();
-  form.append('image', file);
+  form.append('image', await compressGalleryImage(file));
   const { data } = await api.post<GalleryImage>('/gallery', form);
   return normalizeGalleryImage(data);
 }

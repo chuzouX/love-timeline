@@ -215,7 +215,7 @@ const Gallery: React.FC = () => {
                     className={`${showAll ? 'w-full' : getWidthClass(image)} h-36 shrink-0 snap-center overflow-hidden rounded-2xl bg-white/60 shadow-kuromi transition-all hover:scale-[1.02] hover:shadow-kuromi-lg md:h-64`}
                     title={image.originalName}
                   >
-                    <img src={image.url} alt={image.originalName} className="h-full w-full object-cover" draggable={false} />
+                    <img src={image.url} alt={image.originalName} className="h-full w-full object-cover" loading="lazy" decoding="async" draggable={false} />
                   </button>
                 ))}
               </div>
@@ -251,7 +251,7 @@ const Gallery: React.FC = () => {
             </div>
 
             <div className="flex min-h-0 flex-1 items-center justify-center bg-gray-50/30 p-3 md:p-8">
-              <img src={selectedImage.url} alt={selectedImage.originalName} className="max-h-[68vh] max-w-full rounded-2xl object-contain shadow-xl md:max-h-[70vh]" />
+              <img src={selectedImage.url} alt={selectedImage.originalName} className="max-h-[68vh] max-w-full rounded-2xl object-contain shadow-xl md:max-h-[70vh]" decoding="async" />
             </div>
 
             <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-white/80 px-4 py-4 md:px-6 md:py-5">

@@ -384,7 +384,10 @@ seedDefaults();
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
-app.use('/api/gallery/files', express.static(galleryDir));
+app.use('/api/gallery/files', express.static(galleryDir, {
+  immutable: true,
+  maxAge: '30d',
+}));
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
@@ -560,8 +563,11 @@ function eventSelectSql() {
 }
 
 function toGalleryResponse(image: DbGalleryImage) {
+  const filePath = path.join(galleryDir, image.filename);
+  const size = fs.existsSync(filePath) ? fs.statSync(filePath).size : image.size;
   return {
     ...image,
+    size,
     aspectRatio: image.width / image.height,
     url: `/api/gallery/files/${image.filename}`,
   };
