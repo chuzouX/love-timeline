@@ -1,4 +1,14 @@
-# Kuromi Love App
+<p align="center">
+  <img src="./public/favicon.svg" alt="Kuromi Love App Logo" width="96" height="96" />
+</p>
+
+<h1 align="center">Kuromi Love App</h1>
+
+<p align="center">
+  A private relationship dashboard for anniversaries, schedules, period tracking, and a fast CDN-friendly photo gallery.
+</p>
+
+[中文文档](./README.zh-CN.md)
 
 React + TypeScript + Vite frontend with an Express API backed by SQLite.
 
