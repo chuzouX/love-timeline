@@ -30,7 +30,22 @@ export function loadAnalytics() {
   script.defer = true;
   script.src = umamiScriptURL;
   script.dataset.websiteId = umamiWebsiteID;
+  script.dataset.autoTrack = 'false';
   document.head.appendChild(script);
+}
+
+declare global {
+  interface Window {
+    umami: {
+      track: (payload?: any) => void;
+    };
+  }
+}
+
+export function trackPageView() {
+  if (window.umami && typeof window.umami.track === 'function') {
+    window.umami.track();
+  }
 }
 
 export async function getUmamiStats(): Promise<UmamiStats | null> {

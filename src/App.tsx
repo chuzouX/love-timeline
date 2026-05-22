@@ -1,14 +1,20 @@
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Calendar from './pages/Calendar';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import PeriodTracker from './pages/PeriodTracker';
 import Schedule from './pages/Schedule';
+import { trackPageView } from './analytics';
 
 const sectionClass =
   'scroll-mt-24 md:scroll-mt-28 w-full min-w-0 glass-panel rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[3rem] p-4 sm:p-6 md:p-10 shadow-kuromi-lg';
 
 function App() {
+  useEffect(() => {
+    trackPageView();
+  }, []);
+
   return (
     <Layout>
       <section id="home" className={sectionClass}>
