@@ -10,6 +10,21 @@
 
 基于 React + TypeScript + Vite 的前端应用，配套 Express API 和 SQLite 数据库。
 
+## 目录
+
+- [功能](#功能)
+- [技术栈](#技术栈)
+- [项目结构](#项目结构)
+- [环境要求](#环境要求)
+- [环境变量](#环境变量)
+- [本地开发](#本地开发)
+- [画廊图片](#画廊图片)
+- [API 接口文档](#api-接口文档)
+- [前端部署：EdgeOne Pages](#前端部署edgeone-pages)
+- [API 部署：VPS](#api-部署vps)
+- [EdgeOne API 域名 CDN 规则](#edgeone-api-域名-cdn-规则)
+- [故障排查](#故障排查)
+
 ## 功能
 
 - 恋爱资料与纪念日倒计时。
@@ -60,6 +75,11 @@ cp .env.example .env
 | `JWT_SECRET` | `change-this-local-secret` | JWT 签名密钥 |
 | `DATABASE_PATH` | `./server/data/kuromi.sqlite` | SQLite 文件路径 |
 | `VITE_API_BASE_URL` | `/api` | 前端请求 API 的基础地址 |
+| `VITE_UMAMI_BASE_URL` | `https://umami.chuzoux.top` | Umami 实例基础地址 |
+| `VITE_UMAMI_SCRIPT_URL` | `https://umami.chuzoux.top/script.js` | Umami 统计脚本地址 |
+| `VITE_UMAMI_WEBSITE_ID` | `2ff203ed-6094-4e37-b401-f6ab0f17c662` | Umami 站点 ID |
+| `VITE_UMAMI_SHARE_ID` | 空 | 用于展示公开访问量的 Umami 分享 ID |
+| `VITE_UMAMI_TIMEZONE` | `Asia/Shanghai` | 查询 Umami 统计数据时使用的时区 |
 
 如果前端和 API 使用不同域名，构建前设置：
 
@@ -140,6 +160,264 @@ python -m pip install pillow
 npm run compress
 ```
 
+## API 接口文档
+
+基础地址：
+
+```txt
+/api
+```
+
+前后端分离部署时：
+
+```txt
+https://loveapi.chuzoux.top/api
+```
+
+所有写接口都需要请求头：
+
+```txt
+Authorization: Bearer <token>
+```
+
+Token 由 `POST /api/auth/unlock` 返回，有效期为 12 小时。错误响应格式：
+
+```json
+{
+  "error": "message"
+}
+```
+
+### 接口总览
+
+| 方法 | 路径 | 鉴权 | 说明 |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | 否 | 健康检查 |
+| `POST` | `/api/auth/unlock` | 否 | 使用 PIN 换取 JWT |
+| `GET` | `/api/profile` | 否 | 读取恋爱资料 |
+| `PUT` | `/api/profile` | 是 | 更新恋爱资料 |
+| `GET` | `/api/events` | 否 | 获取日历事件 |
+| `POST` | `/api/events` | 是 | 创建日历事件 |
+| `PUT` | `/api/events/:id` | 是 | 更新日历事件 |
+| `DELETE` | `/api/events/:id` | 是 | 删除日历事件 |
+| `GET` | `/api/gallery` | 否 | 获取画廊图片列表 |
+| `POST` | `/api/gallery` | 是 | 上传画廊图片 |
+| `DELETE` | `/api/gallery/:id` | 是 | 删除画廊图片 |
+| `GET` | `/api/gallery/files/:filename` | 否 | 读取画廊图片文件 |
+| `GET` | `/api/schedule` | 否 | 读取课程表 |
+| `PUT` | `/api/schedule` | 是 | 替换课程表 |
+| `GET` | `/api/period` | 否 | 读取生理期数据 |
+| `PUT` | `/api/period/config` | 是 | 更新生理期配置 |
+| `POST` | `/api/period/records` | 是 | 创建生理期记录 |
+| `PUT` | `/api/period/records/:id` | 是 | 更新生理期记录 |
+| `DELETE` | `/api/period/records/:id` | 是 | 删除生理期记录 |
+
+### 鉴权
+
+`POST /api/auth/unlock`
+
+请求体：
+
+```json
+{
+  "pin": "1314"
+}
+```
+
+响应：
+
+```json
+{
+  "token": "jwt-token"
+}
+```
+
+状态码：
+
+- `200`：PIN 正确。
+- `401`：PIN 错误。
+
+### 恋爱资料
+
+资料对象：
+
+```json
+{
+  "relationshipStartDate": "2023-10-20",
+  "herName": "Alice",
+  "himName": "Bob"
+}
+```
+
+`GET /api/profile`
+
+- 返回资料对象。
+
+`PUT /api/profile`
+
+- 需要鉴权。
+- `relationshipStartDate` 必须使用 `YYYY-MM-DD`。
+- `herName` 和 `himName` 可以是字符串或 `null`。
+
+### 日历事件
+
+事件对象：
+
+```json
+{
+  "id": 1,
+  "name": "Anniversary",
+  "date": "2023-10-20",
+  "calendarType": "solar",
+  "lunarMonth": null,
+  "lunarDay": null,
+  "lunarIsLeapMonth": 0,
+  "time": "20:00",
+  "startTime": "20:00",
+  "endTime": null,
+  "recurrence": "yearly",
+  "icon": "heart",
+  "description": "First day together",
+  "color": "bg-pink-100 text-pink-600",
+  "tag": "ANNIVERSARY",
+  "sortOrder": 1
+}
+```
+
+规则：
+
+- `date` 使用 `YYYY-MM-DD`。
+- `calendarType` 为 `solar` 或 `lunar`。
+- 农历事件要求 `lunarMonth` 为 `1` 到 `12`，`lunarDay` 为 `1` 到 `30`。
+- `time`、`startTime`、`endTime` 使用 `HH:mm` 或 `null`。
+- `recurrence` 为 `none` 或 `yearly`。
+
+接口：
+
+- `GET /api/events`：返回 `Event[]`，按 `sortOrder`、`date`、`id` 排序。
+- `POST /api/events`：需要鉴权，创建事件，返回 `201`。
+- `PUT /api/events/:id`：需要鉴权，更新事件。
+- `DELETE /api/events/:id`：需要鉴权，返回 `204`。
+
+### 画廊
+
+图片对象：
+
+```json
+{
+  "id": 1,
+  "filename": "1779307067238-edc4244fa93cb.jpg",
+  "originalName": "photo.jpg",
+  "mimeType": "image/jpeg",
+  "width": 1600,
+  "height": 1200,
+  "size": 135610,
+  "createdAt": "2026-05-22 08:30:00",
+  "aspectRatio": 1.3333333333333333,
+  "url": "/api/gallery/files/1779307067238-edc4244fa93cb.jpg"
+}
+```
+
+接口：
+
+- `GET /api/gallery`：返回 `GalleryImage[]`，按宽高比和创建时间排序。
+- `POST /api/gallery`：需要鉴权，使用 `multipart/form-data`。
+- `DELETE /api/gallery/:id`：需要鉴权，删除数据库记录和文件，返回 `204`。
+- `GET /api/gallery/files/:filename`：返回静态图片文件，带长期缓存响应头。
+
+上传请求：
+
+```txt
+Content-Type: multipart/form-data
+字段名：image
+最大文件大小：12 MB
+允许类型：image/*
+```
+
+### 课程表
+
+课程表对象：
+
+```json
+{
+  "days": ["Monday", "Tuesday"],
+  "times": ["08:00", "10:10"],
+  "items": [
+    {
+      "id": 1,
+      "dayIndex": 0,
+      "timeIndex": 0,
+      "subject": "Math",
+      "person": "her",
+      "duration": 2
+    }
+  ]
+}
+```
+
+规则：
+
+- `person` 为 `her`、`him` 或 `both`。
+- `dayIndex` 必须在 `days` 数组范围内。
+- `timeIndex` 必须在 `times` 数组范围内。
+- `duration` 必须是 `1` 到 `10` 的整数。
+
+接口：
+
+- `GET /api/schedule`：返回课程表。
+- `PUT /api/schedule`：需要鉴权，替换整个课程表。
+
+### 生理期记录
+
+生理期响应：
+
+```json
+{
+  "config": {
+    "id": 1,
+    "cycleDays": 28,
+    "periodDays": 5
+  },
+  "records": [
+    {
+      "id": 1,
+      "startDate": "2026-05-10",
+      "endDate": null,
+      "note": null,
+      "symptoms": [],
+      "createdAt": "2026-05-22 08:30:00"
+    }
+  ],
+  "prediction": {
+    "nextStartDate": "2026-06-07",
+    "daysUntilNext": 16,
+    "ovulationDate": "2026-05-24",
+    "ovulationWindowStart": "2026-05-19",
+    "ovulationWindowEnd": "2026-05-25",
+    "daysUntilOvulation": 2,
+    "daysUntilOvulationWindow": 0,
+    "currentPhase": "ovulation",
+    "currentPhaseLabel": "ovulation"
+  }
+}
+```
+
+规则：
+
+- `cycleDays` 必须为 `15` 到 `60`。
+- `periodDays` 必须为 `1` 到 `14`。
+- `startDate` 和 `endDate` 使用 `YYYY-MM-DD`。
+- `symptoms` 是字符串数组。
+- `currentPhase` 为 `menstrual`、`follicular`、`ovulation`、`luteal` 或 `null`。
+
+接口：
+
+- `GET /api/period`：返回配置、记录和预测。
+- `PUT /api/period/config`：需要鉴权，更新 `cycleDays` 和 `periodDays`。
+- `POST /api/period/records`：需要鉴权，创建记录，返回 `201`。
+- `PUT /api/period/records/:id`：需要鉴权，更新记录。
+- `DELETE /api/period/records/:id`：需要鉴权，返回 `204`。
+
 ## 前端部署：EdgeOne Pages
 
 仓库包含 `edgeone.json`：
@@ -155,7 +433,14 @@ npm run compress
 
 ```env
 VITE_API_BASE_URL=https://loveapi.chuzoux.top/api
+VITE_UMAMI_BASE_URL=https://umami.chuzoux.top
+VITE_UMAMI_SCRIPT_URL=https://umami.chuzoux.top/script.js
+VITE_UMAMI_WEBSITE_ID=2ff203ed-6094-4e37-b401-f6ab0f17c662
+VITE_UMAMI_SHARE_ID=your-share-id
+VITE_UMAMI_TIMEZONE=Asia/Shanghai
 ```
+
+只有在构建时同时存在 `VITE_UMAMI_SCRIPT_URL` 和 `VITE_UMAMI_WEBSITE_ID` 时，前端才会加载 Umami 统计脚本。底部访问量展示还需要 `VITE_UMAMI_SHARE_ID`；这是 Umami 分享链接里的 ID，不是网站 ID。
 
 ## API 部署：VPS
 

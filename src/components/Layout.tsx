@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import NotificationBanner from './NotificationBanner';
+import { getUmamiStats } from '../analytics';
 
 const navItems = [
   { icon: '💕', href: '#home', label: '主页' },
@@ -11,6 +12,7 @@ const navItems = [
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(false);
+  const [witnessCount, setWitnessCount] = useState<number | null>(null);
   
   // Theme logic: Calculate if it should be dark based on time (18:00 - 06:00)
   const isNightTime = () => {
@@ -30,6 +32,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('kuromi_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getUmamiStats()
+      .then((stats) => {
+        if (isMounted) {
+          setWitnessCount(stats?.pageviews ?? null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setWitnessCount(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Auto-switch theme based on time if user hasn't manually set one in this session
   // or just to keep it fresh if the app stays open
@@ -54,6 +76,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setTheme(nextTheme);
     localStorage.setItem('kuromi_theme_manual', 'true'); // Mark that user made a manual choice
   };
+
+  const formattedWitnessCount = witnessCount === null ? '' : new Intl.NumberFormat('zh-CN').format(witnessCount);
 
   return (
     <div className="relative min-h-screen w-full max-w-full overflow-x-clip selection:bg-kuromi-pink/30">
@@ -121,6 +145,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       >
         {children}
       </main>
+
+      {witnessCount !== null && (
+        <footer className="relative z-10 mx-auto w-full max-w-7xl px-3 pb-24 text-center sm:px-4 md:px-8 md:pb-10">
+          <p className="inline-flex items-center justify-center rounded-full border border-white/50 bg-white/55 px-5 py-2 text-xs font-black text-kuromi-purple shadow-sm backdrop-blur-sm md:text-sm">
+            幸福被 <span className="mx-1 text-kuromi-pink">{formattedWitnessCount}</span> 次见证
+          </p>
+        </footer>
+      )}
 
       <nav className="fixed bottom-3 left-3 right-3 z-50 grid grid-cols-5 gap-1 rounded-3xl border border-white/40 bg-white/85 p-2 shadow-kuromi backdrop-blur-md md:hidden">
         {navItems.map((item) => (
