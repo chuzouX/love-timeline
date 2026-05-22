@@ -1,124 +1,245 @@
-# React + TypeScript + Vite
+# Kuromi Love App
 
-## Local app
+React + TypeScript + Vite frontend with an Express API backed by SQLite.
 
-This app now has a local API server backed by SQLite.
+## Features
 
-1. Copy `.env.example` to `.env` if you want to change the default PIN or database path.
-2. Run `npm run dev:all` to start both the API server and Vite.
-3. Open `http://127.0.0.1:5173/`.
+- Relationship profile and anniversary countdowns.
+- Calendar events and recurring reminders.
+- Schedule and period tracker data stored in SQLite.
+- Gallery upload, delete, lazy loading, CDN-friendly image routes, and client-side image compression.
+- PIN unlock flow backed by JWT.
 
-Default API settings:
+## Stack
 
-- API: `http://0.0.0.0:3001`
-- Host: `0.0.0.0`
-- Frontend proxy: `/api/*`
-- Frontend API base URL: `VITE_API_BASE_URL=/api`
-- Default PIN: `1314`
-- SQLite file: `server/data/kuromi.sqlite`
+- Frontend: React 19, TypeScript, Vite, Tailwind CSS.
+- API: Express 5, SQLite through `better-sqlite3`.
+- Uploads: Multer, `image-size`.
+- Deployment target: EdgeOne Pages for frontend, VPS + EdgeOne CDN for API.
+
+## Project Layout
+
+```txt
+src/                    Frontend application
+server/index.ts          Express API and SQLite schema
+server/data/             Local SQLite database, ignored by Git
+server/uploads/gallery/  Gallery uploads, ignored by Git
+scripts/                 Maintenance scripts
+edgeone.json             EdgeOne Pages build and cache config
+```
+
+## Requirements
+
+- Node.js 20+ recommended for frontend builds.
+- Node.js 18+ can run the API, but native dependencies must be installed on the same server and Node version that runs it.
+- Python 3 with Pillow is required only for `npm run compress`.
+
+## Environment
+
+Copy `.env.example` to `.env` for local API settings:
+
+```sh
+cp .env.example .env
+```
+
+Available variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3001` | API port |
+| `HOST` | `0.0.0.0` | API listen host |
+| `PIN_CODE` | `1314` | Unlock PIN |
+| `JWT_SECRET` | `change-this-local-secret` | JWT signing secret |
+| `DATABASE_PATH` | `./server/data/kuromi.sqlite` | SQLite file path |
+| `VITE_API_BASE_URL` | `/api` | Frontend API base URL |
+
+For separated frontend/API domains, set this before building the frontend:
+
+```env
+VITE_API_BASE_URL=https://loveapi.chuzoux.top/api
+```
+
+## Local Development
+
+Install dependencies:
+
+```sh
+npm ci
+```
+
+Start API and Vite together:
+
+```sh
+npm run dev:all
+```
+
+Open:
+
+```txt
+http://127.0.0.1:5173/
+```
 
 Useful commands:
 
-- `npm run server` starts the API in watch mode.
-- `npm run server:start` starts the API once.
-- `npm run dev` starts only the Vite frontend.
-- `npm run build` type-checks and builds the frontend.
-- `npm run lint` runs ESLint.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start Vite only |
+| `npm run server` | Start API in watch mode |
+| `npm run server:start` | Start API once |
+| `npm run dev:all` | Start API and frontend together |
+| `npm run build` | Type-check and build frontend |
+| `npm run lint` | Run ESLint |
+| `npm run preview` | Preview built frontend |
+| `npm run compress` | Compress gallery images in place |
 
-## Linux deployment
+## Gallery Images
 
-Do not deploy a `node_modules` directory copied from Windows. This project uses
-native packages such as `better-sqlite3`, so dependencies should be installed on
-the Linux server:
+Uploaded gallery files are stored in:
+
+```txt
+server/uploads/gallery/
+```
+
+The API serves them from:
+
+```txt
+/api/gallery/files/:filename
+```
+
+The frontend normalizes returned image URLs against `VITE_API_BASE_URL`, so this works for both same-domain and separated frontend/API deployments.
+
+New uploads are compressed in the browser before upload:
+
+- GIF and SVG are skipped.
+- Other image types are rendered through canvas and uploaded as JPEG when that makes the file smaller.
+- Longest side is limited to `1600px`.
+- JPEG quality is `0.78`.
+
+Existing gallery images can be compressed in place:
+
+```sh
+npm run compress
+```
+
+This keeps every image path and filename unchanged. The command tries `python3`, `python`, and Windows `py` automatically.
+
+If Pillow is missing on a Linux server with an externally managed Python environment, prefer a virtual environment:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install pillow
+npm run compress
+```
+
+## Frontend Deployment: EdgeOne Pages
+
+The repository includes `edgeone.json`:
+
+- Install command: `npm ci`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Node version: `20.18.0`
+- `/assets/*`: `Cache-Control: public, max-age=31536000, immutable`
+- HTML and other entry paths: `Cache-Control: no-cache`
+
+Set this Pages environment variable when the API is hosted on `loveapi.chuzoux.top`:
+
+```env
+VITE_API_BASE_URL=https://loveapi.chuzoux.top/api
+```
+
+## API Deployment: VPS
+
+Do not upload a Windows `node_modules` directory to Linux. This project uses native dependencies such as `better-sqlite3`, so dependencies must be installed on the Linux server.
+
+Recommended deployment steps:
 
 ```sh
 cd /www/wwwroot/loveapi.chuzoux.top/kuromi-app
+git pull
+npm ci
+pm2 restart yz-love-api
+```
+
+If native modules fail after changing Node versions:
+
+```sh
 rm -rf node_modules
 npm ci
-npm run server:start
+pm2 restart yz-love-api
 ```
 
-If the existing server copy is already in place and you only need to clear the
-current `tsx` permission error, the updated `server:start` script runs through
-`node --import tsx` instead of executing `node_modules/.bin/tsx` directly.
+The API listens on `HOST=0.0.0.0` by default. Use `HOST=127.0.0.1` only when the API is meant to be reachable only from local Nginx or another local reverse proxy.
 
-The API listens on `HOST=0.0.0.0` by default so it can accept external network
-connections. Set `HOST=127.0.0.1` in `.env` only when the API should be reachable
-from the local machine or a local reverse proxy.
+## EdgeOne CDN Rules For API Domain
 
-If the frontend is hosted on a different domain from the API, set
-`VITE_API_BASE_URL=https://loveapi.chuzoux.top/api` before building the frontend.
-Gallery image URLs are resolved from this value, so uploaded images will load
-from the API domain instead of the frontend domain.
+For `loveapi.chuzoux.top`, configure rules in this order.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Gallery files:
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```regex
+^/api/gallery/files/[^?]+\.(jpg|jpeg|png|webp|gif|bmp|avif|JPG|JPEG|PNG|WEBP|GIF|BMP|AVIF)$
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Recommended actions:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Node cache TTL: 30 to 90 days.
+- Browser cache TTL: 7 to 30 days.
+- Cache key query string: ignore all.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Dynamic API:
+
+```regex
+^/api/.+
+```
+
+Recommended actions:
+
+- Node cache TTL: no cache.
+- Browser cache TTL: no cache.
+- Keep query strings, cookies, and `Authorization` headers.
+- Enable dynamic acceleration or smart routing if available.
+
+## Troubleshooting
+
+`tsx: Permission denied`
+
+- Cause: Linux is trying to execute a copied `node_modules/.bin/tsx` shim.
+- Fix: pull the latest code and install dependencies on Linux with `npm ci`. Scripts use `node --import tsx`.
+
+`better_sqlite3.node was compiled against a different Node.js version`
+
+- Cause: native module was compiled for a different Node ABI.
+- Fix:
+
+```sh
+rm -rf node_modules
+npm ci
+pm2 restart yz-love-api
+```
+
+`502 Bad Gateway`
+
+- The CDN or Nginx can reach the request path, but the upstream API is not responding.
+- Check PM2 logs:
+
+```sh
+pm2 logs yz-love-api --lines 100
+```
+
+`git pull` reports local changes would be overwritten
+
+- Inspect server edits first:
+
+```sh
+git status
+git diff
+```
+
+- If server-only edits are disposable:
+
+```sh
+git restore server/index.ts
+git pull
 ```
