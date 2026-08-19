@@ -10,6 +10,8 @@
 
 [中文文档](./README.zh-CN.md)
 
+# 这个项目归档以后不会维护了，祝大家找到自己的真爱，不要委屈自己
+
 React + TypeScript + Vite frontend with an Express API backed by SQLite.
 
 ## Table Of Contents
